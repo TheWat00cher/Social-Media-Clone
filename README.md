@@ -322,9 +322,9 @@ This project is licensed under the MIT License.
 
 ## 📞 Support
 
-For support, email your-email@example.com or create an issue in the repository.
+For support, email kumarbhaweshjha169@gmail.com or create an issue in the repository.
 
 ---
 
-**Built with ❤️ using the MERN Stack**
+**Built with ❤️ using the MERN Stack By Bhawesh**
 
