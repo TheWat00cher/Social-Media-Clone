@@ -18,13 +18,20 @@ import {
   List,
   ListItem,
   ListItemAvatar,
-  ListItemText
+  ListItemText,
+  Menu,
+  MenuItem,
+  TextField,
+  Alert,
+  CircularProgress
 } from '@mui/material';
-import { PersonAdd, PersonRemove, Edit, Favorite, Comment, Close } from '@mui/icons-material';
+import { PersonAdd, PersonRemove, Edit, Favorite, Comment, Close, Delete, PhotoCamera } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { fetchPosts } from '../redux/slices/postSlice';
+import { fetchPosts, deletePost, likePost } from '../redux/slices/postSlice';
 import { fetchUserById, followUser, clearCurrentProfile } from '../redux/slices/userSlice';
+import { updateUser } from '../redux/slices/authSlice';
+import api from '../utils/api';
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -36,10 +43,36 @@ const Profile = () => {
   // State for comments modal
   const [selectedPost, setSelectedPost] = useState(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  
+  // State for delete confirmation
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
+
+  // State for edit profile
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    username: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: ''
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState('');
 
   // Determine if viewing own profile or another user's profile
   const isOwnProfile = !userId || userId === currentUser?._id;
   const profileUser = isOwnProfile ? currentUser : currentProfile;
+  
+  // Debug logging
+  console.log('Profile debug:', {
+    userId,
+    currentUserId: currentUser?._id,
+    isOwnProfile,
+    postsCount: posts?.length
+  });
 
   // Check if current user is following this profile user
   const isFollowing = profileUser && currentUser && !isOwnProfile ? 
@@ -114,6 +147,154 @@ const Profile = () => {
     setSelectedPost(null);
   };
 
+  const handleDeleteClick = (post, event) => {
+    event.stopPropagation();
+    setPostToDelete(post);
+    setDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (postToDelete) {
+      try {
+        await dispatch(deletePost(postToDelete._id)).unwrap();
+        setDeleteDialog(false);
+        setPostToDelete(null);
+        // Refresh posts after deletion
+        dispatch(fetchPosts());
+      } catch (error) {
+        console.error('Failed to delete post:', error);
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog(false);
+    setPostToDelete(null);
+  };
+
+  // Like handler
+  const handleLike = async (postId) => {
+    try {
+      await dispatch(likePost(postId)).unwrap();
+    } catch (error) {
+      console.error('Failed to like post:', error);
+    }
+  };
+
+  // Edit Profile handlers
+  const handleEditProfileOpen = () => {
+    setEditFormData({
+      username: profileUser?.username || '',
+      firstName: profileUser?.firstName || '',
+      lastName: profileUser?.lastName || '',
+      bio: profileUser?.bio || '',
+      email: profileUser?.email || '',
+      phone: profileUser?.phone || ''
+    });
+    // Set preview with full URL
+    const pictureUrl = profileUser?.profilePicture 
+      ? `http://localhost:5000${profileUser.profilePicture}` 
+      : '';
+    setProfilePicturePreview(pictureUrl);
+    setProfilePicture(null);
+    setEditError('');
+    setEditProfileOpen(true);
+  };
+
+  const handleEditProfileClose = () => {
+    setEditProfileOpen(false);
+    setEditError('');
+    setProfilePicture(null);
+    setProfilePicturePreview('');
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePicture(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditProfileSave = async () => {
+    setEditLoading(true);
+    setEditError('');
+    
+    try {
+      console.log('=== Starting profile update ===');
+      console.log('Edit form data:', editFormData);
+      console.log('User ID:', currentUser._id);
+      console.log('Profile picture:', profilePicture);
+      
+      // Create FormData if profile picture is being uploaded
+      let response;
+      if (profilePicture) {
+        console.log('Uploading with profile picture...');
+        const formData = new FormData();
+        formData.append('profilePicture', profilePicture);
+        Object.keys(editFormData).forEach(key => {
+          if (editFormData[key] !== null && editFormData[key] !== undefined) {
+            formData.append(key, editFormData[key]);
+          }
+        });
+        
+        // Log FormData contents
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1]);
+        }
+        
+        response = await api.put(`/users/${currentUser._id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      } else {
+        console.log('Updating without profile picture...');
+        // Call API to update profile without image
+        response = await api.put(`/users/${currentUser._id}`, editFormData);
+      }
+      
+      console.log('Update successful! Response:', response.data);
+      
+      // Update user in Redux store
+      dispatch(updateUser(response.data.data.user));
+      
+      // Force refresh the profile data
+      const profileIdToRefresh = userId || currentUser._id;
+      if (profileIdToRefresh) {
+        dispatch(fetchUserById(profileIdToRefresh));
+      }
+      
+      setEditProfileOpen(false);
+      setEditLoading(false);
+      setProfilePicture(null);
+      setProfilePicturePreview('');
+      
+      console.log('=== Profile update complete ===');
+    } catch (error) {
+      console.error('=== Profile update failed ===');
+      console.error('Error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error message:', error.message);
+      setEditError(error.response?.data?.message || error.message || 'Failed to update profile. Please try again.');
+      setEditLoading(false);
+    }
+  };
+
   // Helper function to get gradient background for text posts
   const getGradientBackground = (index) => {
     const gradients = [
@@ -161,6 +342,7 @@ const Profile = () => {
           <CardContent sx={{ p: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Avatar
+                src={profileUser?.profilePicture ? `http://localhost:5000${profileUser.profilePicture}` : ''}
                 sx={{ 
                   width: 120, 
                   height: 120, 
@@ -181,7 +363,7 @@ const Profile = () => {
                   @{profileUser?.username}
                 </Typography>
                 {profileUser?.bio && (
-                  <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+                  <Typography variant="body1" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
                     {profileUser.bio}
                   </Typography>
                 )}
@@ -191,6 +373,7 @@ const Profile = () => {
                   <Button 
                     variant="outlined" 
                     startIcon={<Edit />}
+                    onClick={handleEditProfileOpen}
                     sx={{ 
                       borderColor: 'primary.main',
                       color: 'primary.main',
@@ -397,10 +580,29 @@ const Profile = () => {
                       gap: 2,
                       alignItems: 'center',
                       color: 'white',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                      zIndex: 10,
+                      pointerEvents: 'auto'
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 0.5,
+                        cursor: 'pointer',
+                        p: 0.5,
+                        borderRadius: 1,
+                        '&:hover': {
+                          backgroundColor: 'rgba(255,255,255,0.1)'
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleLike(post._id);
+                      }}
+                    >
                       <Favorite sx={{ fontSize: 16, color: '#ff4757' }} />
                       <Typography variant="caption" fontWeight="bold">
                         {post.likes?.length || 0}
@@ -425,6 +627,36 @@ const Profile = () => {
                         {post.comments?.length || 0}
                       </Typography>
                     </Box>
+
+                    {/* Delete button - only show on own profile */}
+                    {isOwnProfile && (
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 0.5,
+                          cursor: 'pointer',
+                          p: 0.8,
+                          borderRadius: 1,
+                          transition: 'all 0.2s ease',
+                          zIndex: 100,
+                          '&:hover': {
+                            backgroundColor: 'rgba(255,77,77,0.3)',
+                            transform: 'scale(1.1)'
+                          }
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          console.log('Delete icon clicked for post:', post._id);
+                          setPostToDelete(post);
+                          setDeleteDialog(true);
+                        }}
+                      >
+                        <Delete sx={{ fontSize: 18, color: '#ff4d4d' }} />
+                      </Box>
+                    )}
+
                   </Box>
                   
                   {/* Hover overlay with stats */}
@@ -445,6 +677,7 @@ const Profile = () => {
                       color: 'white'
                     }}
                   >
+                    {/* Stats in center */}
                     <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -457,6 +690,37 @@ const Profile = () => {
                         </Typography>
                       </Box>
                     </Box>
+
+                    {/* Delete button in bottom-right - only show on own profile */}
+                    {isOwnProfile && (
+                      <IconButton
+                        sx={{
+                          position: 'absolute',
+                          bottom: 12,
+                          right: 12,
+                          color: '#ffffff',
+                          backgroundColor: '#d32f2f',
+                          borderRadius: '50%',
+                          width: 40,
+                          height: 40,
+                          zIndex: 50,
+                          boxShadow: '0 3px 12px rgba(211, 47, 47, 0.4)',
+                          '&:hover': {
+                            backgroundColor: '#c62828',
+                            transform: 'scale(1.15)',
+                            boxShadow: '0 6px 20px rgba(211, 47, 47, 0.6)'
+                          },
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPostToDelete(post);
+                          setDeleteDialog(true);
+                        }}
+                      >
+                        <Delete sx={{ fontSize: 22 }} />
+                      </IconButton>
+                    )}
                   </Box>
                 </Card>
               </Grid>
@@ -521,13 +785,13 @@ const Profile = () => {
                       height: 40
                     }}
                   >
-                    {comment.author?.username?.charAt(0).toUpperCase() || 'U'}
+                    {comment.user?.username?.charAt(0).toUpperCase() || 'U'}
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={
                     <Typography variant="subtitle2" fontWeight="bold">
-                      {comment.author?.username || 'Anonymous'}
+                      {comment.user?.username || 'Anonymous'}
                     </Typography>
                   }
                   secondary={
@@ -553,6 +817,348 @@ const Profile = () => {
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Delete Confirmation Dialog */}
+    <Dialog 
+      open={deleteDialog} 
+      onClose={handleDeleteCancel}
+      maxWidth="xs"
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+          width: '100%',
+          maxWidth: '350px',
+          margin: '16px'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 1,
+        background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+        color: 'white',
+        px: 2,
+        py: 1.5
+      }}>
+        <Delete sx={{ fontSize: 22 }} />
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          Delete Post
+        </Typography>
+      </DialogTitle>
+      <DialogContent sx={{ px: 2, py: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          <Box sx={{
+            width: 40,
+            height: 40,
+            backgroundColor: '#fff3cd',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Typography sx={{ fontSize: '18px' }}>⚠️</Typography>
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.3 }}>
+              Are you sure?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+              This action cannot be undone.
+            </Typography>
+          </Box>
+        </Box>
+        
+        {postToDelete && (
+          <Box sx={{ 
+            p: 1.5, 
+            backgroundColor: '#f8f9fa', 
+            borderRadius: 1.5,
+            border: '1px dashed #dee2e6'
+          }}>
+            <Typography variant="body2" sx={{ 
+              fontStyle: 'italic',
+              color: 'text.secondary',
+              lineHeight: 1.4,
+              fontSize: '0.85rem'
+            }}>
+              "{postToDelete.content?.substring(0, 80)}{postToDelete.content?.length > 80 ? '...' : ''}"
+            </Typography>
+            {postToDelete.image && (
+              <Typography variant="caption" color="primary" sx={{ 
+                display: 'block', 
+                mt: 0.5,
+                fontWeight: 500,
+                fontSize: '0.75rem'
+              }}>
+                📷 Image attachment
+              </Typography>
+            )}
+          </Box>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 2, pb: 1.5, gap: 1 }}>
+        <Button 
+          onClick={handleDeleteCancel}
+          variant="outlined"
+          size="small"
+          sx={{
+            borderRadius: 1.5,
+            px: 2,
+            py: 0.5,
+            fontWeight: 500,
+            textTransform: 'none',
+            borderColor: '#dee2e6',
+            color: 'text.secondary',
+            fontSize: '0.85rem',
+            '&:hover': {
+              borderColor: '#adb5bd',
+              backgroundColor: '#f8f9fa'
+            }
+          }}
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleDeleteConfirm}
+          variant="contained"
+          size="small"
+          sx={{
+            borderRadius: 1.5,
+            px: 2,
+            py: 0.5,
+            fontWeight: 500,
+            textTransform: 'none',
+            backgroundColor: '#dc3545',
+            fontSize: '0.85rem',
+            '&:hover': {
+              backgroundColor: '#c82333'
+            },
+            boxShadow: '0 2px 8px rgba(220, 53, 69, 0.3)'
+          }}
+        >
+          Delete
+        </Button>
+      </DialogActions>
+    </Dialog>
+
+    {/* Edit Profile Dialog */}
+    <Dialog 
+      open={editProfileOpen} 
+      onClose={handleEditProfileClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          overflow: 'hidden'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        px: 3,
+        py: 2,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1
+      }}>
+        <Edit />
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Edit Profile
+        </Typography>
+      </DialogTitle>
+      <DialogContent sx={{ px: 3, pt: 4, pb: 3 }}>
+        {editError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setEditError('')}>
+            {editError}
+          </Alert>
+        )}
+        
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 2 }}>
+          {/* Profile Picture Upload */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            gap: 2,
+            py: 2
+          }}>
+            <Avatar
+              src={profilePicturePreview}
+              sx={{
+                width: 120,
+                height: 120,
+                border: '4px solid',
+                borderColor: 'primary.main',
+                boxShadow: 3
+              }}
+            >
+              {!profilePicturePreview && profileUser?.username?.charAt(0).toUpperCase()}
+            </Avatar>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<PhotoCamera />}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600
+              }}
+            >
+              Change Profile Picture
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+              />
+            </Button>
+            <Typography variant="caption" color="text.secondary">
+              Recommended: Square image, at least 200x200px
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <TextField
+            name="username"
+            label="Username"
+            value={editFormData.username}
+            onChange={handleEditFormChange}
+            fullWidth
+            required
+            helperText="This will be visible to others"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2
+              }
+            }}
+          />
+          
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              name="firstName"
+              label="First Name"
+              value={editFormData.firstName}
+              onChange={handleEditFormChange}
+              fullWidth
+              required
+              helperText="Visible to others"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
+            />
+            <TextField
+              name="lastName"
+              label="Last Name"
+              value={editFormData.lastName}
+              onChange={handleEditFormChange}
+              fullWidth
+              required
+              helperText="Visible to others"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
+            />
+          </Box>
+          
+          <TextField
+            name="bio"
+            label="Bio"
+            value={editFormData.bio}
+            onChange={handleEditFormChange}
+            fullWidth
+            multiline
+            rows={3}
+            helperText="Tell others about yourself - Visible to others (Max 500 characters)"
+            inputProps={{ maxLength: 500 }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2
+              }
+            }}
+          />
+          
+          <Divider sx={{ my: 1 }}>
+            <Typography variant="caption" color="text.secondary">
+              Private Information
+            </Typography>
+          </Divider>
+          
+          <TextField
+            name="email"
+            label="Email"
+            type="email"
+            value={editFormData.email}
+            onChange={handleEditFormChange}
+            fullWidth
+            required
+            helperText="Only you can see this"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2
+              }
+            }}
+          />
+          
+          <TextField
+            name="phone"
+            label="Phone Number"
+            type="tel"
+            value={editFormData.phone}
+            onChange={handleEditFormChange}
+            fullWidth
+            helperText="Optional - Only you can see this"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2
+              }
+            }}
+          />
+        </Box>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+        <Button 
+          onClick={handleEditProfileClose}
+          variant="outlined"
+          disabled={editLoading}
+          sx={{
+            borderRadius: 2,
+            px: 3,
+            textTransform: 'none',
+            fontWeight: 600
+          }}
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleEditProfileSave}
+          variant="contained"
+          disabled={editLoading}
+          sx={{
+            borderRadius: 2,
+            px: 3,
+            textTransform: 'none',
+            fontWeight: 600,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)'
+            }
+          }}
+        >
+          {editLoading ? <CircularProgress size={24} color="inherit" /> : 'Save Changes'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+
     </>
   );
 };

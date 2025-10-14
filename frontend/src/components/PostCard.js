@@ -41,7 +41,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { likePost, addComment, deletePost } from '../redux/slices/postSlice';
 
-const PostCard = ({ post, sx, ...otherProps }) => {
+const PostCard = ({ post, sx, showDelete = false, ...otherProps }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   
@@ -76,12 +76,22 @@ const PostCard = ({ post, sx, ...otherProps }) => {
   const [deleteDialog, setDeleteDialog] = useState(false);
 
   const handleLike = async () => {
+    if (!user) {
+      console.log('User not logged in, cannot like post');
+      return;
+    }
+
+    console.log('Clicking like on post:', post._id);
+    console.log('Current liked state:', getCurrentLikedState());
+    console.log('Current likes count:', post.likes?.length || 0);
+    
     // Optimistic update for immediate UI feedback
     const newLikedState = !getCurrentLikedState();
     setOptimisticLiked(newLikedState);
     
     try {
-      await dispatch(likePost(post._id)).unwrap();
+      const result = await dispatch(likePost(post._id)).unwrap();
+      console.log('Like action completed successfully:', result);
       // Keep the optimistic state until the component re-renders with new data
       // The optimistic state will be reset when the post data is updated
     } catch (error) {
@@ -214,7 +224,7 @@ const PostCard = ({ post, sx, ...otherProps }) => {
           </Avatar>
         }
         action={
-          canDelete && (
+          canDelete && showDelete && (
             <IconButton onClick={handleMenuClick}>
               <MoreVert />
             </IconButton>

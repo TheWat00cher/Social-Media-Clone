@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, Avatar, IconButton } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
@@ -54,6 +54,19 @@ const Navbar = () => {
               }}
             >
               <SearchIcon />
+            </IconButton>
+            <IconButton 
+              color="inherit" 
+              onClick={() => navigate('/create-post')}
+              sx={{ 
+                color: 'text.secondary',
+                '&:hover': {
+                  backgroundColor: 'rgba(24, 119, 242, 0.08)',
+                  color: 'primary.main'
+                }
+              }}
+            >
+              <AddIcon />
             </IconButton>
             <Button 
               color="inherit" 

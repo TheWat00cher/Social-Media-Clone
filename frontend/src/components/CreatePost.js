@@ -14,12 +14,13 @@ import { PhotoCamera, Close } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { createPost } from '../redux/slices/postSlice';
 
-const CreatePost = () => {
+const CreatePost = ({ onPostCreated }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -36,17 +37,31 @@ const CreatePost = () => {
     setImagePreview(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (content.trim() || image) {
-      const postData = {
-        content: content.trim(),
-        image
-      };
-      dispatch(createPost(postData));
-      setContent('');
-      setImage(null);
-      setImagePreview(null);
+      setIsLoading(true);
+      try {
+        const postData = {
+          content: content.trim(),
+          image
+        };
+        await dispatch(createPost(postData)).unwrap();
+        
+        // Reset form
+        setContent('');
+        setImage(null);
+        setImagePreview(null);
+        
+        // Call callback if provided
+        if (onPostCreated) {
+          onPostCreated();
+        }
+      } catch (error) {
+        console.error('Failed to create post:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -138,7 +153,7 @@ const CreatePost = () => {
               <Button
                 variant="contained"
                 onClick={handleSubmit}
-                disabled={!content.trim() && !image}
+                disabled={(!content.trim() && !image) || isLoading}
                 sx={{
                   textTransform: 'none',
                   fontWeight: 600,
@@ -155,7 +170,7 @@ const CreatePost = () => {
                   }
                 }}
               >
-                Post
+                {isLoading ? 'Posting...' : 'Post'}
               </Button>
             </Box>
             

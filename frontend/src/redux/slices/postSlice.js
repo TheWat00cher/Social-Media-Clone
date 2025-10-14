@@ -41,9 +41,12 @@ export const likePost = createAsyncThunk(
   'posts/likePost',
   async (postId, { rejectWithValue }) => {
     try {
+      console.log('Redux: Sending like request for post:', postId);
       const response = await api.post(`/posts/${postId}/like`);
+      console.log('Redux: Like response:', response.data);
       return response.data.data.post;
     } catch (error) {
+      console.error('Redux: Like error:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || 'Failed to like post');
     }
   }
@@ -124,12 +127,24 @@ const postSlice = createSlice({
       
       // Like post
       .addCase(likePost.fulfilled, (state, action) => {
+        console.log('Redux: likePost.fulfilled - payload:', action.payload);
         if (action.payload && action.payload._id && Array.isArray(state.posts)) {
           const index = state.posts.findIndex(post => post && post._id === action.payload._id);
           if (index !== -1) {
+            console.log('Redux: Updating post at index:', index, 'with likes:', action.payload.likes?.length);
             state.posts[index] = action.payload;
+          } else {
+            console.log('Redux: Post not found in state for update');
           }
+        } else {
+          console.log('Redux: Invalid payload for likePost.fulfilled');
         }
+        state.loading = false;
+      })
+      .addCase(likePost.rejected, (state, action) => {
+        console.error('Redux: likePost.rejected:', action.payload);
+        state.loading = false;
+        state.error = action.payload;
       })
       
       // Add comment

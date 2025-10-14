@@ -58,6 +58,7 @@ const authSlice = createSlice({
     isAuthenticated: false,
     loading: true,
     error: null,
+    showWelcome: false,
   },
   reducers: {
     logout: (state) => {
@@ -67,12 +68,19 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.loading = false;
+      state.showWelcome = false;
     },
     clearError: (state) => {
       state.error = null;
     },
     stopLoading: (state) => {
       state.loading = false;
+    },
+    hideWelcome: (state) => {
+      state.showWelcome = false;
+    },
+    updateUser: (state, action) => {
+      state.user = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -87,6 +95,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
+        state.showWelcome = true;
         state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
@@ -105,6 +114,7 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+        state.showWelcome = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -131,5 +141,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, stopLoading } = authSlice.actions;
+export const { logout, clearError, stopLoading, hideWelcome, updateUser } = authSlice.actions;
 export default authSlice.reducer;
