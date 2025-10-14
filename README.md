@@ -12,18 +12,24 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 
 ### 👤 User Profiles
 - ✅ **Customizable user profiles** with avatars and bio
+- ✅ **Profile picture upload/change** with image preview
 - ✅ **Profile statistics** (posts count, followers, following)
-- ✅ **Edit profile functionality**
+- ✅ **Edit profile functionality** (username, name, email, phone, bio)
+- ✅ **Public/Private fields** (only username and name visible to others)
 - ✅ **Follow/Unfollow system** with real-time updates
 - ✅ **Instagram-style profile grid** with 3-column layout
+- ✅ **Delete posts** from own profile with confirmation dialog
 
 ### 📝 Posts & Content
+- ✅ **Dedicated Create Post Page** with breadcrumb navigation
 - ✅ **Create text posts** with rich content
 - ✅ **Image uploads** with Multer middleware
 - ✅ **Post interactions** (likes, comments, shares)
+- ✅ **Delete posts** with styled confirmation dialog
 - ✅ **Real-time engagement updates**
 - ✅ **Mixed content display** (text and image posts)
 - ✅ **Beautiful gradient backgrounds** for text posts
+- ✅ **Home feed** showing all posts chronologically
 
 ### 🔍 Search & Discovery
 - ✅ **Advanced search functionality**
@@ -34,11 +40,13 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Filter by content type** (users/posts)
 
 ### 💬 Social Interactions
-- ✅ **Comment system** with threaded discussions
+- ✅ **Comment system** with user avatars and names
 - ✅ **Like/unlike posts** with optimistic UI updates
+- ✅ **Like functionality in profile** with instant feedback
 - ✅ **Follow/unfollow users** with instant feedback
 - ✅ **Real-time notifications** using Socket.io
-- ✅ **Engagement statistics** on hover
+- ✅ **Engagement statistics** on hover overlay
+- ✅ **Comments dialog** with proper user attribution
 
 ### 🎨 User Interface
 - ✅ **Modern Material-UI design** with custom theming
@@ -46,7 +54,10 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Instagram-inspired aesthetics**
 - ✅ **Smooth animations** and hover effects
 - ✅ **Glass morphism effects** and modern styling
-- ✅ **Dark/light theme support**
+- ✅ **Hidden scrollbars** for cleaner look
+- ✅ **Floating Action Button** for quick post creation
+- ✅ **Gradient headers** and styled dialogs
+- ✅ **Profile picture preview** in edit dialog
 
 ### ⚡ Real-time Features
 - ✅ **Live notifications** for likes, comments, follows
@@ -125,6 +136,7 @@ social-media-clone/
 │   │   │   ├── Login.js
 │   │   │   ├── Register.js
 │   │   │   ├── Profile.js
+│   │   │   ├── CreatePostPage.js
 │   │   │   └── Search.js
 │   │   ├── redux/
 │   │   │   ├── store.js
@@ -218,6 +230,7 @@ social-media-clone/
 ### Users
 - `GET /api/users` - Get all users
 - `GET /api/users/:id` - Get user by ID
+- `PUT /api/users/:id` - Update user profile (with file upload)
 - `POST /api/users/:id/follow` - Follow/unfollow user
 - `GET /api/users/:id/followers` - Get user followers
 - `GET /api/users/:id/following` - Get user following
@@ -239,12 +252,34 @@ social-media-clone/
 
 ## 🎯 Key Features Explained
 
+### Dedicated Create Post Page
+- **Separate route** `/create-post` for focused post creation
+- **Breadcrumb navigation** for better UX
+- **Tips section** with guidelines for creating posts
+- **Auto-redirect** to home after successful post creation
+- **Floating Action Button** on home page for quick access
+
+### Profile Picture Management
+- **Upload/Change profile picture** with file selection
+- **Image preview** before saving
+- **Multer middleware** for secure file handling
+- **Automatic URL generation** for uploaded images
+- **Display across application** (profile, navbar, comments)
+
+### Edit Profile Functionality
+- **Comprehensive profile editing** with multiple fields
+- **Public fields**: Username, First Name, Last Name, Bio
+- **Private fields**: Email, Phone Number
+- **Validation**: Unique username and email checks
+- **Styled dialog** with gradient header and organized sections
+
 ### Profile Grid Layout
 - **3-column Instagram-style grid** for posts display
 - **30% width posts** with responsive design
 - **Gradient backgrounds** for text-only posts
 - **80/15 split** for image posts (80% image, 15% caption)
 - **Hover effects** showing engagement statistics
+- **Delete icon integration** with like/comment stats
 
 ### Search Functionality
 - **Real-time search** with 500ms debouncing
