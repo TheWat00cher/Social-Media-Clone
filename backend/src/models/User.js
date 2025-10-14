@@ -41,6 +41,12 @@ const userSchema = new mongoose.Schema({
     maxlength: [500, 'Bio cannot exceed 500 characters'],
     default: ''
   },
+  phone: {
+    type: String,
+    trim: true,
+    maxlength: [10, 'Phone number cannot exceed 10 characters'],
+    default: ''
+  },
   profilePicture: {
     type: String,
     default: ''

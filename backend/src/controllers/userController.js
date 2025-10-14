@@ -216,9 +216,86 @@ const searchUsers = asyncHandler(async (req, res) => {
   sendSuccess(res, 'Search results retrieved successfully', { users });
 });
 
+// @desc    Update user profile
+// @route   PUT /api/users/:id
+// @access  Private
+const updateUser = asyncHandler(async (req, res) => {
+  console.log('=== Update User Request ===');
+  console.log('Request params ID:', req.params.id);
+  console.log('Request user ID:', req.user.id);
+  console.log('Request body:', req.body);
+  console.log('Request file:', req.file);
+  
+  // Check if user is updating their own profile
+  if (req.params.id !== req.user.id) {
+    return sendError(res, 'Not authorized to update this profile', 403);
+  }
+
+  const { username, firstName, lastName, email, phone, bio } = req.body;
+
+  // Check if username is already taken by another user
+  if (username) {
+    const existingUser = await User.findOne({ 
+      username, 
+      _id: { $ne: req.user.id } 
+    });
+    
+    if (existingUser) {
+      return sendError(res, 'Username is already taken', 400);
+    }
+  }
+
+  // Check if email is already taken by another user
+  if (email) {
+    const existingEmail = await User.findOne({ 
+      email, 
+      _id: { $ne: req.user.id } 
+    });
+    
+    if (existingEmail) {
+      return sendError(res, 'Email is already in use', 400);
+    }
+  }
+
+  // Prepare update object
+  const updateData = {
+    ...(username && { username }),
+    ...(firstName && { firstName }),
+    ...(lastName && { lastName }),
+    ...(email && { email }),
+    ...(phone !== undefined && { phone }),
+    ...(bio !== undefined && { bio })
+  };
+
+  // Add profile picture if uploaded
+  if (req.file) {
+    updateData.profilePicture = `/uploads/${req.file.filename}`;
+    console.log('Profile picture path:', updateData.profilePicture);
+  }
+
+  console.log('Update data:', updateData);
+
+  // Update user
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { $set: updateData },
+    { new: true, runValidators: true }
+  ).select('-password');
+
+  if (!user) {
+    return sendError(res, 'User not found', 404);
+  }
+
+  console.log('Updated user:', user);
+  console.log('=== Update User Success ===');
+
+  sendSuccess(res, 'Profile updated successfully', { user });
+});
+
 module.exports = {
   getUsers,
   getUserById,
+  updateUser,
   followUser,
   getUserFollowers,
   getUserFollowing,

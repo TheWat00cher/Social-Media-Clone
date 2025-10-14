@@ -229,20 +229,26 @@ const deletePost = asyncHandler(async (req, res) => {
 // @route   POST /api/posts/:id/like
 // @access  Private
 const likePost = asyncHandler(async (req, res) => {
+  console.log('Backend: likePost called for post:', req.params.id, 'by user:', req.user.id);
+  
   const post = await Post.findById(req.params.id)
     .populate('author', 'username firstName lastName profilePicture isVerified');
 
   if (!post) {
+    console.log('Backend: Post not found:', req.params.id);
     return sendError(res, 'Post not found', 404);
   }
 
   const isLiked = post.isLikedBy(req.user.id);
+  console.log('Backend: Current liked state:', isLiked, 'Current likes count:', post.likes.length);
 
   if (isLiked) {
     // Unlike
+    console.log('Backend: Removing like from post');
     await post.removeLike(req.user.id);
   } else {
     // Like
+    console.log('Backend: Adding like to post');
     await post.addLike(req.user.id);
 
     // Create notification if not own post
@@ -291,6 +297,7 @@ const likePost = asyncHandler(async (req, res) => {
   postObj.likeCount = updatedPost.likes.length;
   postObj.commentCount = updatedPost.comments.length;
 
+  console.log('Backend: Sending response with likes count:', postObj.likeCount, 'isLiked:', postObj.isLiked);
   sendSuccess(res, 'Post updated successfully', { post: postObj });
 });
 
