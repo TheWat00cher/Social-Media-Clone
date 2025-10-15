@@ -42,10 +42,13 @@ app.use(morgan('combined'));
 
 // CORS configuration - allow frontend to communicate with backend
 const allowedOrigins = [
-  process.env.CLIENT_URL,
-  process.env.CORS_ORIGIN,
-  "http://localhost:3000"
-].filter(Boolean);
+  'https://social-media-clone-c90ghqjip-bhawesh-jhas-projects.vercel.app',
+  'http://localhost:3000'
+];
+
+// Add env variables if they exist
+if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
+if (process.env.CORS_ORIGIN) allowedOrigins.push(process.env.CORS_ORIGIN);
 
 console.log('Allowed CORS Origins:', allowedOrigins); // Debug log
 
