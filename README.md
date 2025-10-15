@@ -330,11 +330,27 @@ npm start
 2. Deploy the `build` folder
 3. Update API endpoints to production URLs
 
-### Backend Deployment (Heroku/Railway)
-1. Set environment variables
-2. Update CORS settings for production domain
-3. Configure MongoDB Atlas connection
-4. Deploy to platform of choice
+### Production Deployment
+
+**📚 Comprehensive Deployment Guides:**
+
+- **[QUICK-DEPLOY.md](./QUICK-DEPLOY.md)** - Fast 30-minute deployment guide
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete step-by-step guide with troubleshooting
+- **[DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md)** - Track your deployment progress
+
+**Deployment Stack:**
+- **Frontend**: Vercel (free)
+- **Backend**: Railway (free $5 credit/month)
+- **Database**: MongoDB Atlas (free 512MB)
+- **Images**: Cloudinary (free 25GB/month)
+
+**Total Cost: $0/month** with free tiers!
+
+**Quick Links:**
+- [Vercel](https://vercel.com) - Frontend hosting
+- [Railway](https://railway.app) - Backend hosting
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) - Database
+- [Cloudinary](https://cloudinary.com) - Image storage
 
 ## 🤝 Contributing
 
