@@ -2,6 +2,12 @@
 
 A fully-featured social media platform built with the MERN stack (MongoDB, Express.js, React.js, Node.js). This application provides a modern, Instagram-like experience with real-time features and comprehensive social networking capabilities.
 
+## 🌐 Live Demo
+
+**🚀 [View Live Application](https://social-media-clone-c90ghqjip-bhawesh-jhas-projects.vercel.app)**
+
+> **Try it now!** Register an account, create posts, upload images, follow users, and explore real-time social features.
+
 ## 🚀 Features
 
 ### 🔐 Authentication & Security
@@ -330,27 +336,18 @@ npm start
 2. Deploy the `build` folder
 3. Update API endpoints to production URLs
 
-### Production Deployment
+### Production Deployment## � Deployment
 
-**📚 Comprehensive Deployment Guides:**
+This project is deployed and live!
 
-- **[QUICK-DEPLOY.md](./QUICK-DEPLOY.md)** - Fast 30-minute deployment guide
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete step-by-step guide with troubleshooting
-- **[DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md)** - Track your deployment progress
+- **Frontend**: [Vercel](https://social-media-clone-c90ghqjip-bhawesh-jhas-projects.vercel.app)
+- **Backend**: Railway
+- **Database**: MongoDB Atlas
+- **Image Storage**: Cloudinary
 
-**Deployment Stack:**
-- **Frontend**: Vercel (free)
-- **Backend**: Railway (free $5 credit/month)
-- **Database**: MongoDB Atlas (free 512MB)
-- **Images**: Cloudinary (free 25GB/month)
+### Deploy Your Own
 
-**Total Cost: $0/month** with free tiers!
-
-**Quick Links:**
-- [Vercel](https://vercel.com) - Frontend hosting
-- [Railway](https://railway.app) - Backend hosting
-- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) - Database
-- [Cloudinary](https://cloudinary.com) - Image storage
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 🤝 Contributing
 
@@ -366,16 +363,18 @@ This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- **Material-UI** for the beautiful component library
-- **MongoDB** for the flexible database solution
-- **Socket.io** for real-time functionality
-- **React community** for the amazing ecosystem
+- Material-UI for the beautiful component library
+- MongoDB for the flexible database solution
+- Socket.io for real-time functionality
+- React community for the amazing ecosystem
 
-## 📞 Support
+## 📞 Contact
 
-For support, email kumarbhaweshjha169@gmail.com or create an issue in the repository.
+**Bhawesh Kumar Jha**
+- Email: kumarbhaweshjha169@gmail.com
+- GitHub: [@TheWat00cher](https://github.com/TheWat00cher)
 
 ---
 
-**Built with ❤️ using the MERN Stack By Bhawesh**
+**Built with ❤️ using the MERN Stack**
 
