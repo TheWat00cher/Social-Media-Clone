@@ -39,10 +39,20 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 app.use(morgan('combined'));
+
+// CORS configuration - allow frontend to communicate with backend
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.CORS_ORIGIN,
+  "http://localhost:3000"
+].filter(Boolean);
+
+console.log('Allowed CORS Origins:', allowedOrigins); // Debug log
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  origin: allowedOrigins,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
 }));
 
