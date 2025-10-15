@@ -130,7 +130,12 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Server is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    cors: {
+      CLIENT_URL: process.env.CLIENT_URL || 'not set',
+      CORS_ORIGIN: process.env.CORS_ORIGIN || 'not set',
+      allowedOrigins: allowedOrigins
+    }
   });
 });
 
