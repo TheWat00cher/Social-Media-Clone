@@ -16,6 +16,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
 import CreatePostPage from './pages/CreatePostPage';
+import Messages from './pages/Messages';
 
 // Create theme
 const theme = createTheme({
@@ -144,6 +145,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreatePostPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute>
+                  <Messages />
                 </ProtectedRoute>
               } 
             />

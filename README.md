@@ -1,12 +1,12 @@
 # SocialConnect - MERN Stack Social Media Platform
 
-A fully-featured social media platform built with the MERN stack (MongoDB, Express.js, React.js, Node.js). This application provides a modern, Instagram-like experience with real-time features and comprehensive social networking capabilities.
+A fully-featured social media platform built with the MERN stack (MongoDB, Express.js, React.js, Node.js). This application provides a modern, Instagram-like experience with real-time features, messaging, and comprehensive social networking capabilities.
 
 ## 🌐 Live Demo
 
 **🚀 [View Live Application](https://social-media-clone-c90ghqjip-bhawesh-jhas-projects.vercel.app)**
 
-> **Try it now!** Register an account, create posts, upload images, follow users, and explore real-time social features.
+> **Try it now!** Register an account, create posts, upload images, follow users, send messages, and explore real-time social features.
 
 ## 🚀 Features
 
@@ -15,6 +15,8 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Secure password hashing** with bcryptjs
 - ✅ **Protected routes** with authentication middleware
 - ✅ **Session management** with persistent login state
+- ✅ **Input validation** with detailed error messages
+- ✅ **Client-side validation** for better UX
 
 ### 👤 User Profiles
 - ✅ **Customizable user profiles** with avatars and bio
@@ -25,6 +27,8 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Follow/Unfollow system** with real-time updates
 - ✅ **Instagram-style profile grid** with 3-column layout
 - ✅ **Delete posts** from own profile with confirmation dialog
+- ✅ **View followers/following lists** with clickable dialogs
+- ✅ **Navigate between user profiles** seamlessly
 
 ### 📝 Posts & Content
 - ✅ **Dedicated Create Post Page** with breadcrumb navigation
@@ -35,7 +39,21 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Real-time engagement updates**
 - ✅ **Mixed content display** (text and image posts)
 - ✅ **Beautiful gradient backgrounds** for text posts
-- ✅ **Home feed** showing all posts chronologically
+- ✅ **Personalized feed** showing posts from followed users only
+- ✅ **Like persistence** after page refresh
+- ✅ **Non-clickable post images** for better UX
+
+### 💬 Real-time Messaging
+- ✅ **One-on-one messaging** with Socket.io
+- ✅ **Real-time message delivery** and notifications
+- ✅ **Conversation list** with last message preview
+- ✅ **Unread message count** in navbar
+- ✅ **Message from profile** - start conversation from any user's profile
+- ✅ **Message from search** - quick message users you find
+- ✅ **Typing indicators** support (backend ready)
+- ✅ **Message search** within conversations
+- ✅ **Auto-scroll** to latest messages
+- ✅ **Socket.io connection** status logging
 
 ### 🔍 Search & Discovery
 - ✅ **Advanced search functionality**
@@ -44,6 +62,7 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Real-time search results** with debouncing
 - ✅ **User discovery** with follow buttons
 - ✅ **Filter by content type** (users/posts)
+- ✅ **Message users** directly from search results
 
 ### 💬 Social Interactions
 - ✅ **Comment system** with user avatars and names
@@ -53,6 +72,7 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Real-time notifications** using Socket.io
 - ✅ **Engagement statistics** on hover overlay
 - ✅ **Comments dialog** with proper user attribution
+- ✅ **Isolated follow buttons** (no batch triggering)
 
 ### 🎨 User Interface
 - ✅ **Modern Material-UI design** with custom theming
@@ -64,32 +84,40 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - ✅ **Floating Action Button** for quick post creation
 - ✅ **Gradient headers** and styled dialogs
 - ✅ **Profile picture preview** in edit dialog
+- ✅ **Welcome messages** - different for new vs returning users
+- ✅ **Empty state messages** - helpful guidance when no content
+- ✅ **Loading states** with spinners
+- ✅ **Error handling** with user-friendly messages
 
 ### ⚡ Real-time Features
 - ✅ **Live notifications** for likes, comments, follows
 - ✅ **Socket.io integration** for real-time updates
 - ✅ **Instant UI feedback** with optimistic updates
 - ✅ **Connected users tracking**
+- ✅ **Real-time messaging** with instant delivery
+- ✅ **Typing indicators** (backend support)
+- ✅ **Message read receipts**
 
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React.js 18** - Modern React with hooks
-- **Redux Toolkit** - State management
-- **Material-UI (MUI)** - Component library
-- **React Router** - Client-side routing
-- **Axios** - HTTP client
-- **Socket.io Client** - Real-time communication
+- **React.js 19.2.0** - Modern React with hooks
+- **Redux Toolkit 2.9.0** - State management
+- **Material-UI (MUI) 7.3.3** - Component library
+- **React Router 7.9.3** - Client-side routing
+- **Axios 1.12.2** - HTTP client
+- **Socket.io Client 4.8.1** - Real-time communication
 
 ### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **MongoDB** - NoSQL database
-- **Mongoose** - MongoDB ODM
-- **Socket.io** - Real-time communication
+- **Node.js v25.0.0** - Runtime environment
+- **Express.js 4.18.2** - Web framework
+- **MongoDB** - NoSQL database (Atlas/Local)
+- **Mongoose 7.5.0** - MongoDB ODM
+- **Socket.io 4.7.2** - Real-time communication
 - **JWT** - Authentication tokens
-- **bcryptjs** - Password hashing
-- **Multer** - File upload handling
+- **bcryptjs 2.4.3** - Password hashing
+- **Multer 1.4.5** - File upload handling
+- **Cloudinary 1.40.0** - Cloud image storage (optional)
 
 ### Development Tools
 - **nodemon** - Development server
@@ -97,6 +125,7 @@ A fully-featured social media platform built with the MERN stack (MongoDB, Expre
 - **helmet** - Security middleware
 - **express-rate-limit** - Rate limiting
 - **morgan** - HTTP request logger
+- **dotenv** - Environment variables
 
 ## 📁 Project Structure
 

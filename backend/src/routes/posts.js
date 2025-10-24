@@ -65,7 +65,7 @@ const addCommentValidation = [
 ];
 
 // Routes
-router.get('/', optionalAuth, getPosts);
+router.get('/', auth, getPosts);
 router.get('/search', searchPosts);
 router.post('/', auth, uploadSingle, createPostValidation, handleValidationErrors, createPost);
 router.get('/:id', optionalAuth, getPost);

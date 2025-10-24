@@ -29,20 +29,50 @@ const Register = () => {
     confirmPassword: '',
   });
 
+  const [validationError, setValidationError] = useState('');
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setValidationError(''); // Clear validation error on input change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Client-side validation
+    if (!formData.firstName.trim()) {
+      setValidationError('First name is required');
+      return;
+    }
+    if (!formData.lastName.trim()) {
+      setValidationError('Last name is required');
+      return;
+    }
+    if (!formData.username.trim()) {
+      setValidationError('Username is required');
+      return;
+    }
+    if (!formData.email.trim()) {
+      setValidationError('Email is required');
+      return;
+    }
+    if (!formData.password) {
+      setValidationError('Password is required');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setValidationError('Password must be at least 6 characters long');
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
+      setValidationError('Passwords do not match');
       return;
     }
     
+    setValidationError('');
     const result = await dispatch(register(formData));
     if (result.payload && !result.error) {
       navigate('/');
@@ -91,7 +121,7 @@ const Register = () => {
             </Typography>
           </Box>
           
-          {error && (
+          {(error || validationError) && (
             <Alert 
               severity="error" 
               sx={{ 
@@ -102,11 +132,11 @@ const Register = () => {
                 }
               }}
             >
-              {error}
+              {validationError || error}
             </Alert>
           )}
           
-          {formData.password !== formData.confirmPassword && formData.confirmPassword && (
+          {!validationError && formData.password !== formData.confirmPassword && formData.confirmPassword && (
             <Alert 
               severity="error" 
               sx={{ 

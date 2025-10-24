@@ -1,14 +1,27 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Avatar, IconButton } from '@mui/material';
-import { Search as SearchIcon, Add as AddIcon } from '@mui/icons-material';
+import React, { useEffect } from 'react';
+import { AppBar, Toolbar, Typography, Button, Box, Avatar, IconButton, Badge } from '@mui/material';
+import { Search as SearchIcon, Add as AddIcon, Message as MessageIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
+import { getUnreadCount } from '../redux/slices/messageSlice';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { unreadCount } = useSelector((state) => state.messages);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(getUnreadCount());
+      // Poll for unread count every 30 seconds
+      const interval = setInterval(() => {
+        dispatch(getUnreadCount());
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -67,6 +80,21 @@ const Navbar = () => {
               }}
             >
               <AddIcon />
+            </IconButton>
+            <IconButton 
+              color="inherit" 
+              onClick={() => navigate('/messages')}
+              sx={{ 
+                color: 'text.secondary',
+                '&:hover': {
+                  backgroundColor: 'rgba(24, 119, 242, 0.08)',
+                  color: 'primary.main'
+                }
+              }}
+            >
+              <Badge badgeContent={unreadCount} color="error">
+                <MessageIcon />
+              </Badge>
             </IconButton>
             <Button 
               color="inherit" 

@@ -19,22 +19,22 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Menu,
-  MenuItem,
   TextField,
   Alert,
   CircularProgress
 } from '@mui/material';
-import { PersonAdd, PersonRemove, Edit, Favorite, Comment, Close, Delete, PhotoCamera } from '@mui/icons-material';
+import { PersonAdd, PersonRemove, Edit, Favorite, Comment, Close, Delete, PhotoCamera, Message } from '@mui/icons-material';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { useParams } from 'react-router-dom';
 import { fetchPosts, deletePost, likePost } from '../redux/slices/postSlice';
 import { fetchUserById, followUser, clearCurrentProfile } from '../redux/slices/userSlice';
 import { updateUser } from '../redux/slices/authSlice';
+import { createConversation } from '../redux/slices/messageSlice';
 import api from '../utils/api';
 
 const Profile = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { userId } = useParams();
   const { user: currentUser } = useSelector((state) => state.auth);
   const { posts, loading: postsLoading } = useSelector((state) => state.posts);
@@ -61,6 +61,13 @@ const Profile = () => {
   const [editError, setEditError] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState('');
+
+  // State for followers/following dialog
+  const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
+  const [followingDialogOpen, setFollowingDialogOpen] = useState(false);
+  const [followersList, setFollowersList] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
+  const [loadingFollowers, setLoadingFollowers] = useState(false);
 
   // Determine if viewing own profile or another user's profile
   const isOwnProfile = !userId || userId === currentUser?._id;
@@ -134,6 +141,57 @@ const Profile = () => {
         console.error('Follow/unfollow failed:', error);
       }
     }
+  };
+
+  const handleMessageClick = async () => {
+    if (profileUser && !isOwnProfile && currentUser) {
+      try {
+        const result = await dispatch(createConversation({ participantId: profileUser._id })).unwrap();
+        navigate('/messages', { state: { conversationId: result._id } });
+      } catch (error) {
+        console.error('Failed to create conversation:', error);
+      }
+    }
+  };
+
+  const handleFollowersClick = async () => {
+    setLoadingFollowers(true);
+    setFollowersDialogOpen(true);
+    try {
+      const userId = profileUser._id || profileUser.id;
+      const response = await api.get(`/users/${userId}/followers`);
+      console.log('Followers response:', response.data);
+      // Backend returns paginated response: { data: { data: [...], pagination: {...} } }
+      setFollowersList(response.data.data?.data || response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch followers:', error);
+      setFollowersList([]);
+    } finally {
+      setLoadingFollowers(false);
+    }
+  };
+
+  const handleFollowingClick = async () => {
+    setLoadingFollowers(true);
+    setFollowingDialogOpen(true);
+    try {
+      const userId = profileUser._id || profileUser.id;
+      const response = await api.get(`/users/${userId}/following`);
+      console.log('Following response:', response.data);
+      // Backend returns paginated response: { data: { data: [...], pagination: {...} } }
+      setFollowingList(response.data.data?.data || response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch following:', error);
+      setFollowingList([]);
+    } finally {
+      setLoadingFollowers(false);
+    }
+  };
+
+  const handleUserClick = (userId) => {
+    setFollowersDialogOpen(false);
+    setFollowingDialogOpen(false);
+    navigate(`/profile/${userId}`);
   };
 
   const handleCommentClick = (post, event) => {
@@ -386,24 +444,42 @@ const Profile = () => {
                     Edit Profile
                   </Button>
                 ) : (
-                  <Button
-                    variant={isFollowing ? "outlined" : "contained"}
-                    startIcon={isFollowing ? <PersonRemove /> : <PersonAdd />}
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                    sx={{
-                      minWidth: 120,
-                      bgcolor: isFollowing ? 'transparent' : 'primary.main',
-                      color: isFollowing ? 'primary.main' : 'white',
-                      borderColor: 'primary.main',
-                      '&:hover': {
-                        bgcolor: isFollowing ? 'primary.main' : 'primary.dark',
-                        color: 'white'
-                      }
-                    }}
-                  >
-                    {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
-                  </Button>
+                  <>
+                    <Button
+                      variant={isFollowing ? "outlined" : "contained"}
+                      startIcon={isFollowing ? <PersonRemove /> : <PersonAdd />}
+                      onClick={handleFollowToggle}
+                      disabled={followLoading}
+                      sx={{
+                        minWidth: 120,
+                        bgcolor: isFollowing ? 'transparent' : 'primary.main',
+                        color: isFollowing ? 'primary.main' : 'white',
+                        borderColor: 'primary.main',
+                        '&:hover': {
+                          bgcolor: isFollowing ? 'primary.main' : 'primary.dark',
+                          color: 'white'
+                        }
+                      }}
+                    >
+                      {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Message />}
+                      onClick={handleMessageClick}
+                      sx={{
+                        minWidth: 120,
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        '&:hover': {
+                          bgcolor: 'primary.main',
+                          color: 'white'
+                        }
+                      }}
+                    >
+                      Message
+                    </Button>
+                  </>
                 )}
               </Box>
             </Box>
@@ -417,7 +493,12 @@ const Profile = () => {
                   Posts
                 </Typography>
               </Grid>
-              <Grid item xs={4}>
+              <Grid 
+                item 
+                xs={4} 
+                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: 1 } }}
+                onClick={handleFollowersClick}
+              >
                 <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
                   {profileUser?.followerCount || profileUser?.followers?.length || 0}
                 </Typography>
@@ -425,7 +506,12 @@ const Profile = () => {
                   Followers
                 </Typography>
               </Grid>
-              <Grid item xs={4}>
+              <Grid 
+                item 
+                xs={4} 
+                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: 1 } }}
+                onClick={handleFollowingClick}
+              >
                 <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
                   {profileUser?.followingCount || profileUser?.following?.length || 0}
                 </Typography>
@@ -1157,6 +1243,140 @@ const Profile = () => {
           {editLoading ? <CircularProgress size={24} color="inherit" /> : 'Save Changes'}
         </Button>
       </DialogActions>
+    </Dialog>
+
+    {/* Followers Dialog */}
+    <Dialog 
+      open={followersDialogOpen} 
+      onClose={() => setFollowersDialogOpen(false)}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Followers
+          </Typography>
+          <IconButton onClick={() => setFollowersDialogOpen(false)}>
+            <Close />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent dividers>
+        {loadingFollowers ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : followersList.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography color="text.secondary">No followers yet</Typography>
+          </Box>
+        ) : (
+          <List>
+            {followersList.map((follower) => (
+              <ListItem
+                key={follower._id}
+                button
+                onClick={() => handleUserClick(follower._id)}
+                sx={{
+                  borderRadius: 2,
+                  mb: 1,
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    src={follower.profilePicture ? `http://localhost:5000${follower.profilePicture}` : ''}
+                    sx={{ bgcolor: 'primary.main' }}
+                  >
+                    {follower.username?.charAt(0).toUpperCase()}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {follower.firstName && follower.lastName 
+                        ? `${follower.firstName} ${follower.lastName}`
+                        : follower.username
+                      }
+                    </Typography>
+                  }
+                  secondary={`@${follower.username}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </DialogContent>
+    </Dialog>
+
+    {/* Following Dialog */}
+    <Dialog 
+      open={followingDialogOpen} 
+      onClose={() => setFollowingDialogOpen(false)}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Following
+          </Typography>
+          <IconButton onClick={() => setFollowingDialogOpen(false)}>
+            <Close />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent dividers>
+        {loadingFollowers ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : followingList.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography color="text.secondary">Not following anyone yet</Typography>
+          </Box>
+        ) : (
+          <List>
+            {followingList.map((following) => (
+              <ListItem
+                key={following._id}
+                button
+                onClick={() => handleUserClick(following._id)}
+                sx={{
+                  borderRadius: 2,
+                  mb: 1,
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    src={following.profilePicture ? `http://localhost:5000${following.profilePicture}` : ''}
+                    sx={{ bgcolor: 'primary.main' }}
+                  >
+                    {following.username?.charAt(0).toUpperCase()}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {following.firstName && following.lastName 
+                        ? `${following.firstName} ${following.lastName}`
+                        : following.username
+                      }
+                    </Typography>
+                  }
+                  secondary={`@${following.username}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </DialogContent>
     </Dialog>
 
     </>

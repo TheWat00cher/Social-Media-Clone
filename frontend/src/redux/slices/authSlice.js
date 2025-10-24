@@ -11,7 +11,16 @@ export const login = createAsyncThunk(
       localStorage.setItem('token', token);
       return { user, token };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      const detailedErrors = error.response?.data?.errors;
+      
+      // If there are detailed errors, format them nicely
+      if (detailedErrors && Array.isArray(detailedErrors)) {
+        const errorList = detailedErrors.map(e => e.message).join('. ');
+        return rejectWithValue(errorList);
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -28,7 +37,16 @@ export const register = createAsyncThunk(
       return { user, token };
     } catch (error) {
       console.error('Register error:', error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      const errorMessage = error.response?.data?.message || 'Registration failed';
+      const detailedErrors = error.response?.data?.errors;
+      
+      // If there are detailed errors, format them nicely
+      if (detailedErrors && Array.isArray(detailedErrors)) {
+        const errorList = detailedErrors.map(e => e.message).join('. ');
+        return rejectWithValue(errorList);
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -59,6 +77,7 @@ const authSlice = createSlice({
     loading: true,
     error: null,
     showWelcome: false,
+    isNewUser: false,
   },
   reducers: {
     logout: (state) => {
@@ -69,6 +88,7 @@ const authSlice = createSlice({
       state.error = null;
       state.loading = false;
       state.showWelcome = false;
+      state.isNewUser = false;
     },
     clearError: (state) => {
       state.error = null;
@@ -78,6 +98,7 @@ const authSlice = createSlice({
     },
     hideWelcome: (state) => {
       state.showWelcome = false;
+      state.isNewUser = false;
     },
     updateUser: (state, action) => {
       state.user = action.payload;
@@ -96,6 +117,7 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.showWelcome = true;
+        state.isNewUser = false;
         state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
@@ -115,6 +137,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
         state.showWelcome = true;
+        state.isNewUser = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;

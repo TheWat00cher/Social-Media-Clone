@@ -20,7 +20,7 @@ const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { posts, loading, error } = useSelector((state) => state.posts);
-  const { user, isAuthenticated, showWelcome } = useSelector((state) => state.auth);
+  const { user, isAuthenticated, showWelcome, isNewUser } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -56,38 +56,46 @@ const Home = () => {
     <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh', position: 'relative' }}>
       <Container maxWidth="md" sx={{ pt: 3, pb: 4 }}>
         {/* Welcome Header - Only shown after login/register */}
-        <Collapse in={showWelcome}>
-          <Box sx={{ 
-            textAlign: 'center', 
-            mb: 4,
-            p: 3,
-            background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-            borderRadius: 3,
-            color: 'white',
-            boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)'
-          }}>
-            <Typography 
-              variant="h4" 
-              component="h1" 
-              gutterBottom
-              sx={{ 
-                fontWeight: 700,
-                textShadow: '0 2px 4px rgba(0,0,0,0.2)'
-              }}
-            >
-              Welcome back, {user?.firstName || user?.username}! 👋
-            </Typography>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                opacity: 0.9,
-                fontWeight: 300
-              }}
-            >
-              Discover what's happening in your network
-            </Typography>
-          </Box>
-        </Collapse>
+        {showWelcome && (
+          <Collapse in={showWelcome}>
+            <Box sx={{ 
+              textAlign: 'center', 
+              mb: 4,
+              p: 3,
+              background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+              borderRadius: 3,
+              color: 'white',
+              boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)'
+            }}>
+              <Typography 
+                variant="h4" 
+                component="h1" 
+                gutterBottom
+                sx={{ 
+                  fontWeight: 700,
+                  textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+              >
+                {isNewUser 
+                  ? `Welcome, ${user?.firstName || user?.username}! 🎉`
+                  : `Welcome back, ${user?.firstName || user?.username}! 👋`
+                }
+              </Typography>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  opacity: 0.9,
+                  fontWeight: 300
+                }}
+              >
+                {isNewUser
+                  ? "Let's get you started! Connect with friends and share your moments"
+                  : "Discover what's happening in your network"
+                }
+              </Typography>
+            </Box>
+          </Collapse>
+        )}
         
         {/* Error Message */}
         {error && (
@@ -143,26 +151,46 @@ const Home = () => {
                 color="text.secondary" 
                 sx={{ mb: 3, opacity: 0.8 }}
               >
-                Your feed is empty. Start following people or create your first post!
+                Your feed is empty. Follow other users to see their posts here!
               </Typography>
-              <Card
-                sx={{
-                  p: 2,
-                  backgroundColor: 'primary.main',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'inline-block',
-                  borderRadius: 2,
-                  '&:hover': {
-                    backgroundColor: 'primary.dark'
-                  }
-                }}
-                onClick={() => navigate('/create-post')}
-              >
-                <Typography variant="button" sx={{ fontWeight: 600 }}>
-                  ✨ Create Your First Post
-                </Typography>
-              </Card>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Card
+                  sx={{
+                    p: 2,
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                    cursor: 'pointer',
+                    display: 'inline-block',
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: 'primary.dark'
+                    }
+                  }}
+                  onClick={() => navigate('/search')}
+                >
+                  <Typography variant="button" sx={{ fontWeight: 600 }}>
+                    🔍 Find People to Follow
+                  </Typography>
+                </Card>
+                <Card
+                  sx={{
+                    p: 2,
+                    backgroundColor: 'secondary.main',
+                    color: 'white',
+                    cursor: 'pointer',
+                    display: 'inline-block',
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: 'secondary.dark'
+                    }
+                  }}
+                  onClick={() => navigate('/create-post')}
+                >
+                  <Typography variant="button" sx={{ fontWeight: 600 }}>
+                    ✨ Create a Post
+                  </Typography>
+                </Card>
+              </Box>
             </Card>
           )}
         </Box>

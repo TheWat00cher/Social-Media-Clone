@@ -18,6 +18,7 @@ const userRoutes = require('./routes/users');
 const postRoutes = require('./routes/posts');
 const uploadRoutes = require('./routes/upload');
 const searchRoutes = require('./routes/search');
+const messageRoutes = require('./routes/messages');
 
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
@@ -96,6 +97,7 @@ io.on('connection', (socket) => {
   socket.on('join', (userId) => {
     connectedUsers.set(userId, socket.id);
     socket.join(userId);
+    console.log(`User ${userId} joined with socket ${socket.id}`);
   });
 
   socket.on('sendNotification', (data) => {
@@ -103,6 +105,29 @@ io.on('connection', (socket) => {
     if (recipientSocketId) {
       io.to(recipientSocketId).emit('notification', data);
     }
+  });
+
+  // Typing indicator for messages
+  socket.on('typing', (data) => {
+    const { conversationId, userId } = data;
+    socket.to(conversationId).emit('userTyping', { userId, conversationId });
+  });
+
+  socket.on('stopTyping', (data) => {
+    const { conversationId, userId } = data;
+    socket.to(conversationId).emit('userStopTyping', { userId, conversationId });
+  });
+
+  // Join conversation room
+  socket.on('joinConversation', (conversationId) => {
+    socket.join(conversationId);
+    console.log(`Socket ${socket.id} joined conversation ${conversationId}`);
+  });
+
+  // Leave conversation room
+  socket.on('leaveConversation', (conversationId) => {
+    socket.leave(conversationId);
+    console.log(`Socket ${socket.id} left conversation ${conversationId}`);
   });
 
   socket.on('disconnect', () => {
@@ -127,6 +152,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

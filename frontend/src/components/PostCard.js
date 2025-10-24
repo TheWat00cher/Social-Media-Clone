@@ -103,7 +103,28 @@ const PostCard = ({ post, sx, showDelete = false, ...otherProps }) => {
 
   // Helper function to get current liked state
   const getCurrentLikedState = () => {
-    return optimisticLiked !== null ? optimisticLiked : post.isLiked;
+    if (optimisticLiked !== null) {
+      return optimisticLiked;
+    }
+    // Check if current user has liked this post
+    if (user && post.likes && Array.isArray(post.likes)) {
+      const userLiked = post.likes.some(like => 
+        like.user === user._id || 
+        like.user === user.id ||
+        like.user?._id === user._id ||
+        like.user?._id === user.id
+      );
+      console.log('PostCard - Checking like status:', {
+        postId: post._id,
+        userId: user._id || user.id,
+        likes: post.likes,
+        userLiked,
+        isLiked: post.isLiked
+      });
+      return userLiked;
+    }
+    // Fall back to isLiked property from backend
+    return post.isLiked || false;
   };
 
   const handleComment = () => {
@@ -251,10 +272,8 @@ const PostCard = ({ post, sx, showDelete = false, ...otherProps }) => {
                 width: '100%', 
                 borderRadius: '8px', 
                 maxHeight: '500px', 
-                objectFit: 'cover',
-                cursor: 'pointer'
+                objectFit: 'cover'
               }}
-              onClick={() => window.open(getImageUrl(post.images[0].url), '_blank')}
               onError={(e) => {
                 e.target.style.display = 'none';
               }}

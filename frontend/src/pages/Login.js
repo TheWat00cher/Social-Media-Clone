@@ -24,15 +24,30 @@ const Login = () => {
     password: '',
   });
 
+  const [validationError, setValidationError] = useState('');
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setValidationError(''); // Clear validation error on input change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Client-side validation
+    if (!formData.email.trim()) {
+      setValidationError('Email is required');
+      return;
+    }
+    if (!formData.password) {
+      setValidationError('Password is required');
+      return;
+    }
+    
+    setValidationError('');
     const result = await dispatch(login(formData));
     if (result.payload && !result.error) {
       navigate('/');
@@ -81,7 +96,7 @@ const Login = () => {
             </Typography>
           </Box>
           
-          {error && (
+          {(error || validationError) && (
             <Alert 
               severity="error" 
               sx={{ 
@@ -92,7 +107,7 @@ const Login = () => {
                 }
               }}
             >
-              {error}
+              {validationError || error}
             </Alert>
           )}
           

@@ -10,28 +10,21 @@ const getPosts = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, userId } = req.query;
   const { page: pageNum, limit: limitNum, skip } = getPagination(page, limit);
 
-  let query = { visibility: 'public' };
+  let query = {};
   
-  // If userId is provided, get posts from that user
+  // If userId is provided, get posts from that specific user (for profile pages)
   if (userId) {
     query.author = userId;
-  }
-  
-  // If user is authenticated, include posts from followed users
-  if (req.user) {
+  } else if (req.user) {
+    // Home feed: Only show posts from users the current user is following and their own posts
     const user = await User.findById(req.user.id);
-    const followingIds = user.following;
+    const followingIds = user.following || [];
     
-    query = {
-      $or: [
-        { visibility: 'public' },
-        { author: { $in: [...followingIds, req.user.id] } }
-      ]
-    };
-    
-    if (userId) {
-      query = { author: userId };
-    }
+    // Include user's own ID in the query
+    query.author = { $in: [...followingIds, req.user.id] };
+  } else {
+    // Not authenticated: return empty (redirect to login should happen on frontend)
+    return sendSuccess(res, 'Authentication required', { data: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } });
   }
 
   const total = await Post.countDocuments(query);

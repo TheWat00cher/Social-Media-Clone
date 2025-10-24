@@ -14,33 +14,21 @@ import {
   InputAdornment,
   CircularProgress
 } from '@mui/material';
-import { Search as SearchIcon, PersonAdd, PersonRemove } from '@mui/icons-material';
+import { Search as SearchIcon, PersonAdd, PersonRemove, Message } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { followUser } from '../redux/slices/userSlice';
+import { createConversation } from '../redux/slices/messageSlice';
 
 const Search = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user: currentUser } = useSelector((state) => state.auth);
-  const { followLoading } = useSelector((state) => state.users);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchType, setSearchType] = useState('users'); // 'users' or 'posts'
-
-  // Debounced search function
-  useEffect(() => {
-    const delayedSearch = setTimeout(() => {
-      if (searchQuery.trim()) {
-        handleSearch();
-      } else {
-        setSearchResults([]);
-      }
-    }, 500);
-
-    return () => clearTimeout(delayedSearch);
-  }, [searchQuery, searchType]);
+  const [followingUserId, setFollowingUserId] = useState(null); // Track which user is being followed
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -75,7 +63,22 @@ const Search = () => {
     }
   };
 
+  // Debounced search function
+  useEffect(() => {
+    const delayedSearch = setTimeout(() => {
+      if (searchQuery.trim()) {
+        handleSearch();
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayedSearch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, searchType]);
+
   const handleFollowToggle = async (userId) => {
+    setFollowingUserId(userId); // Set the specific user being followed
     try {
       await dispatch(followUser(userId)).unwrap();
       // Update the search results to reflect the new follow status
@@ -92,6 +95,17 @@ const Search = () => {
       ));
     } catch (error) {
       console.error('Follow/unfollow failed:', error);
+    } finally {
+      setFollowingUserId(null); // Clear the following state
+    }
+  };
+
+  const handleMessageClick = async (userId) => {
+    try {
+      const result = await dispatch(createConversation({ participantId: userId })).unwrap();
+      navigate('/messages', { state: { conversationId: result._id } });
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
     }
   };
 
@@ -227,26 +241,52 @@ const Search = () => {
                       </Box>
 
                       {user._id !== currentUser?._id && (
-                        <Button
-                          variant={isFollowing(user) ? "outlined" : "contained"}
-                          startIcon={isFollowing(user) ? <PersonRemove /> : <PersonAdd />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFollowToggle(user._id);
-                          }}
-                          disabled={followLoading}
-                          size="small"
-                          sx={{
-                            minWidth: 100,
-                            bgcolor: isFollowing(user) ? 'transparent' : 'primary.main',
-                            '&:hover': {
-                              bgcolor: isFollowing(user) ? 'primary.main' : 'primary.dark',
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          {isFollowing(user) ? 'Unfollow' : 'Follow'}
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                          <Button
+                            variant={isFollowing(user) ? "outlined" : "contained"}
+                            startIcon={isFollowing(user) ? <PersonRemove /> : <PersonAdd />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFollowToggle(user._id);
+                            }}
+                            disabled={followingUserId === user._id}
+                            size="small"
+                            sx={{
+                              minWidth: 100,
+                              bgcolor: isFollowing(user) ? 'transparent' : 'primary.main',
+                              '&:hover': {
+                                bgcolor: isFollowing(user) ? 'primary.main' : 'primary.dark',
+                                color: 'white'
+                              }
+                            }}
+                          >
+                            {followingUserId === user._id ? (
+                              <CircularProgress size={20} color="inherit" />
+                            ) : (
+                              isFollowing(user) ? 'Unfollow' : 'Follow'
+                            )}
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            startIcon={<Message />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMessageClick(user._id);
+                            }}
+                            size="small"
+                            sx={{
+                              minWidth: 100,
+                              borderColor: 'primary.main',
+                              color: 'primary.main',
+                              '&:hover': {
+                                bgcolor: 'primary.main',
+                                color: 'white'
+                              }
+                            }}
+                          >
+                            Message
+                          </Button>
+                        </Box>
                       )}
                     </CardContent>
                   </Card>
