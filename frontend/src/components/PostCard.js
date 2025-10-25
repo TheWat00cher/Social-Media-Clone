@@ -48,16 +48,20 @@ const PostCard = ({ post, sx, showDelete = false, ...otherProps }) => {
   // Helper function to ensure proper image URL format
   const getImageUrl = (url) => {
     if (!url) return '';
-    // If URL already starts with http, return as is
+    // If URL already starts with http, return as is (Cloudinary URLs)
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
+    // Get the API base URL without /api suffix
+    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const serverUrl = apiBaseUrl.replace('/api', '');
+    
     // If URL starts with uploads/, add the server prefix
     if (url.startsWith('uploads/')) {
-      return `http://localhost:5000/${url}`;
+      return `${serverUrl}/${url}`;
     }
     // If URL doesn't start with uploads/, assume it needs the full path
-    return `http://localhost:5000/uploads/${url}`;
+    return `${serverUrl}/uploads/${url}`;
   };
 
   const [showComments, setShowComments] = useState(false);

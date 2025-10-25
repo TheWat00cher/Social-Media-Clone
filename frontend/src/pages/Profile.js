@@ -69,6 +69,10 @@ const Profile = () => {
   const [followingList, setFollowingList] = useState([]);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
 
+  // Get server URL for image paths
+  const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const serverUrl = apiBaseUrl.replace('/api', '');
+
   // Determine if viewing own profile or another user's profile
   const isOwnProfile = !userId || userId === currentUser?._id;
   const profileUser = isOwnProfile ? currentUser : currentProfile;
@@ -251,7 +255,7 @@ const Profile = () => {
     });
     // Set preview with full URL
     const pictureUrl = profileUser?.profilePicture 
-      ? `http://localhost:5000${profileUser.profilePicture}` 
+      ? `${serverUrl}${profileUser.profilePicture}` 
       : '';
     setProfilePicturePreview(pictureUrl);
     setProfilePicture(null);
@@ -379,8 +383,8 @@ const Profile = () => {
     if (typeof imageUrl !== 'string') return '';
     
     if (imageUrl.startsWith('http')) return imageUrl;
-    if (imageUrl.startsWith('/uploads/')) return `http://localhost:5000${imageUrl}`;
-    return `http://localhost:5000/${imageUrl}`;
+    if (imageUrl.startsWith('/uploads/')) return `${serverUrl}${imageUrl}`;
+    return `${serverUrl}/${imageUrl}`;
   };
 
   if (postsLoading && (!posts || posts.length === 0)) {
@@ -400,7 +404,7 @@ const Profile = () => {
           <CardContent sx={{ p: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Avatar
-                src={profileUser?.profilePicture ? `http://localhost:5000${profileUser.profilePicture}` : ''}
+                src={profileUser?.profilePicture ? `${serverUrl}${profileUser.profilePicture}` : ''}
                 sx={{ 
                   width: 120, 
                   height: 120, 
@@ -1288,7 +1292,7 @@ const Profile = () => {
               >
                 <ListItemAvatar>
                   <Avatar
-                    src={follower.profilePicture ? `http://localhost:5000${follower.profilePicture}` : ''}
+                    src={follower.profilePicture ? `${serverUrl}${follower.profilePicture}` : ''}
                     sx={{ bgcolor: 'primary.main' }}
                   >
                     {follower.username?.charAt(0).toUpperCase()}
@@ -1355,7 +1359,7 @@ const Profile = () => {
               >
                 <ListItemAvatar>
                   <Avatar
-                    src={following.profilePicture ? `http://localhost:5000${following.profilePicture}` : ''}
+                    src={following.profilePicture ? `${serverUrl}${following.profilePicture}` : ''}
                     sx={{ bgcolor: 'primary.main' }}
                   >
                     {following.username?.charAt(0).toUpperCase()}

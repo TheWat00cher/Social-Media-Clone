@@ -28,6 +28,10 @@ const Search = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchType, setSearchType] = useState('users'); // 'users' or 'posts'
+
+  // Get server URL for image paths
+  const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const serverUrl = apiBaseUrl.replace('/api', '');
   const [followingUserId, setFollowingUserId] = useState(null); // Track which user is being followed
 
   const handleSearch = async () => {
@@ -38,7 +42,7 @@ const Search = () => {
       const token = localStorage.getItem('token');
       console.log('Searching for:', searchQuery, 'Type:', searchType);
       
-      const response = await fetch(`http://localhost:5000/api/search/${searchType}?q=${encodeURIComponent(searchQuery)}`, {
+      const response = await fetch(`${apiBaseUrl}/search/${searchType}?q=${encodeURIComponent(searchQuery)}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -316,7 +320,7 @@ const Search = () => {
                       {post.images && post.images.length > 0 && (
                         <Box
                           component="img"
-                          src={`http://localhost:5000/${post.images[0]}`}
+                          src={`${serverUrl}/${post.images[0]}`}
                           alt="Post"
                           sx={{
                             width: '100%',
