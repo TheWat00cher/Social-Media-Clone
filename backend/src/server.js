@@ -29,8 +29,26 @@ const server = createServer(app);
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: function (origin, callback) {
+      // Allow requests with no origin
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Allow all Vercel deployments
+      if (origin.includes('vercel.app')) {
+        return callback(null, true);
+      }
+      
+      // Allow localhost
+      if (origin.includes('localhost')) {
+        return callback(null, true);
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+    },
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -54,7 +72,24 @@ if (process.env.CORS_ORIGIN) allowedOrigins.push(process.env.CORS_ORIGIN);
 console.log('Allowed CORS Origins:', allowedOrigins); // Debug log
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Allow all Vercel deployments
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow specific origins from the list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
